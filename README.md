@@ -1,6 +1,10 @@
 # ansible-role-sonarr
 
-Red Hat - Sonarr is a PVR for Usenet and BitTorrent users
+[![Build Status](https://travis-ci.org/dropsignal/ansible-role-sonarr.svg?branch=master)](https://travis-ci.org/dropsignal/ansible-role-sonarr)
+[![Ansible Galaxy](https://img.shields.io/badge/ansible--galaxy-sonarr-blue.svg?style=flat)](https://galaxy.ansible.com/dropsignal/sonarr)
+[![License](https://img.shields.io/badge/license-GPLv2-brightgreen.svg?style=flat)](COPYING)
+
+RedHat - Sonarr is a PVR for Usenet and BitTorrent users
 
 ## Requirements
 
