@@ -8,31 +8,12 @@ None
 
 ## Role Variables
 
-    jackett_cpuaccounting: false
-    jackett_cpuquota: 100%
-    jackett_group: jackett
-    jackett_home: /opt/jackett
-    jackett_owner: jackett
-    jackett_serverconfig:
-      Port: 9117
-      AllowExternal: true
-      APIKey: t0zpjpktkzx6ks5kiwk3diqp803phj7l
-      AdminPassword: ''
-      InstanceId: d8o15332wedlx8bnxdxd1m2ztoeo88wcf01z3uwlu5dm2t5wyxvjtj965vbs79t8
-      BlackholeDir: ''
-      UpdateDisabled: false
-      UpdatePrerelease: false
-      BasePathOverride: ''
-      OmdbApiKey: ''
-      OmdbApiUrl: ''
-      ProxyUrl: ''
-      ProxyType: 0
-      ProxyPort: ''
-      ProxyUsername: ''
-      ProxyPassword: ''
-      ProxyIsAnonymous: true
-    jackett_shell: /sbin/nologin
-    jackett_update: false
+    sonarr_group: sonarr
+    sonarr_home: /var/lib/sonarr
+    sonarr_owner: sonarr
+    sonarr_serverconfig:
+      port: 8989
+      adminpassword: ''
 
 ## Dependencies
 
