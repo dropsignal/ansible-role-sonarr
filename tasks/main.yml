@@ -1,0 +1,179 @@
+---
+- name: Ensure sonarr dependencies are installed (RedHat)
+  tags: sonarr
+  become: true
+  yum:
+    name: "{{ sonarr_packages }}"
+    state: present
+  vars:
+    sonarr_packages:
+      - mono-devel
+  when: ansible_os_family == 'RedHat'
+
+- name: Ensure the sonarr group is present
+  tags: sonarr
+  become: true
+  group:
+    gid: "{{ sonarr_gid|default(omit) }}"
+    name: "{{ sonarr_group }}"
+    state: present
+    system: true
+
+- name: Ensure the sonarr user is present
+  tags: sonarr
+  become: true
+  user:
+    create_home: true
+    group: "{{ sonarr_group }}"
+    home: "{{ sonarr_home }}"
+    move_home: true
+    name: "{{ sonarr_owner }}"
+    password_lock: true
+    shell: "{{ sonarr_shell }}"
+    skeleton: 'no'
+    state: present
+    system: true
+    uid: "{{ sonarr_uid|default(omit) }}"
+
+- name: Overlaying sonarr systemd service
+  tags: sonarr
+  become: true
+  template:
+    dest: /usr/lib/systemd/system/sonarr.service
+    group: root
+    mode: 0644
+    owner: root
+    src: sonarr.service.j2
+
+- name: Reload the systemd manager configuration
+  tags: sonarr
+  become: true
+  systemd:
+    daemon_reload: true
+
+- name: Gathering attributes of {{ [sonarr_home, 'Sonarr', 'ServerConfig.json']|join('/') }}
+  tags: sonarr
+  become: true
+  stat:
+    path: "{{ [sonarr_home, 'Sonarr', 'ServerConfig.json']|join('/') }}"
+  register: _sonarr_conf
+
+- name: Stopping sonarr service to overlay configuration settings
+  tags: sonarr
+  become: true
+  service:
+    name: sonarr
+    state: stopped
+  when: _sonarr_conf.stat.exists
+
+- name: Gathering the latest sonarr release information from github
+  tags: sonarr
+  uri:
+    method: GET
+    status_code: 200
+    url: https://api.github.com/repos/sonarr/Sonarr/releases/latest
+  register: _sonarr_uri
+  when: not _sonarr_conf.stat.exists or sonarr_update|bool
+
+- name: Gathering sonarr version information
+  tags: sonarr
+  set_fact:
+    sonarr_version: "{{ _sonarr_uri.json.name }}"
+  when: not _sonarr_conf.stat.exists or sonarr_update|bool
+
+- name: Creating temporary file for release download
+  tags: sonarr
+  become: true
+  tempfile:
+    prefix: 'sonarr.'
+    state: file
+    suffix: '.tar.gz'
+  register: _sonarr_tempfile
+  when: not _sonarr_conf.stat.exists or sonarr_update|bool
+
+- name: Fetching the latest linux sonarr release (x86_64)
+  tags: sonarr
+  become: true
+  get_url:
+    dest: "{{ _sonarr_tempfile.path }}"
+    force: true
+    group: "{{ sonarr_group }}"
+    mode: 0644
+    owner: "{{ sonarr_owner }}"
+    url: 'https://github.com/Jackett/Jackett/releases/download/{{ sonarr_version }}/Jackett.Binaries.LinuxAMDx64.tar.gz'
+  when:
+    - not _sonarr_conf.stat.exists or sonarr_update|bool
+    - ansible_architecture == "x86_64"
+
+- name: Fetching the latest linux sonarr release (ARMv7_32)
+  tags: sonarr
+  become: true
+  get_url:
+    dest: "{{ _sonarr_tempfile.path }}"
+    force: true
+    group: "{{ sonarr_group }}"
+    mode: 0644
+    owner: "{{ sonarr_owner }}"
+    url: 'https://github.com/Jackett/Jackett/releases/download/{{ sonarr_version }}/Jackett.Binaries.LinuxARM32.tar.gz'
+  when:
+    - not _sonarr_conf.stat.exists or sonarr_update|bool
+    - ansible_architecture == "armv7l"
+
+- name: Extracting sonarr release into {{ sonarr_home }}
+  tags: sonarr
+  become: true
+  unarchive:
+    dest: "{{ sonarr_home }}"
+    extra_opts:
+      - --strip-components=1
+    group: "{{ sonarr_group }}"
+    owner: "{{ sonarr_owner }}"
+    remote_src: true
+    src: "{{ _sonarr_tempfile.path }}"
+  when: not _sonarr_conf.stat.exists or sonarr_update|bool
+
+- name: Purging temporary file from filesystem
+  tags: sonarr
+  become: true
+  file:
+    path: "{{ _sonarr_tempfile.path }}"
+    state: absent
+  when: not _sonarr_conf.stat.exists or sonarr_update|bool
+
+- name: Creating sonarr configuration directory
+  tags: sonarr
+  become: true
+  file:
+    group: "{{ sonarr_group }}"
+    mode: 0700
+    owner: "{{ sonarr_owner }}"
+    path: "{{ [sonarr_home, 'Jackett']|join('/') }}"
+    state: directory
+
+- name: Overlaying the sonarr server configuration
+  tags: sonarr
+  become: true
+  template:
+    dest: "{{ [sonarr_home, 'Jackett', 'ServerConfig.json']|join('/') }}"
+    group: "{{ sonarr_group }}"
+    mode: 0600
+    owner: "{{ sonarr_owner }}"
+    src: ServerConfig.json.j2
+
+- name: Recursively updating {{ sonarr_home }} permissions
+  tags: sonarr
+  become: true
+  file:
+    group: "{{ sonarr_group }}"
+    path: "{{ sonarr_home }}"
+    owner: "{{ sonarr_owner }}"
+    recurse: true
+
+- name: Ensure the sonarr service is started and enabled on boot
+  tags: sonarr
+  become: true
+  service:
+    enabled: true
+    name: sonarr
+    state: started
+...
