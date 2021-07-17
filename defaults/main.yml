@@ -2,7 +2,7 @@
 sonarr_cpuaccounting: false
 sonarr_cpuquota: 100%
 sonarr_group: sonarr
-sonarr_home: /opt/sonarr
+sonarr_home: /var/lib/sonarr
 sonarr_owner: sonarr
 sonarr_serverconfig:
   port: 8989
