@@ -1,0 +1,19 @@
+[Unit]
+Description=API Support for your favorite torrent trackers
+After=network.target
+
+[Service]
+CPUAccounting={{ 'true' if sonarr_cpuaccounting|bool else 'false' }}
+CPUQuota={{ sonarr_cpuquota }}
+ExecStart=/bin/sh "{{ sonarr_home }}/sonarr_launcher.sh"
+Group={{ sonarr_group }}
+Restart=always
+RestartSec=5
+SyslogIdentifier=sonarr
+TimeoutStopSec=30
+Type=simple
+User={{ sonarr_owner }}
+WorkingDirectory={{ sonarr_home }}
+
+[Install]
+WantedBy=multi-user.target
