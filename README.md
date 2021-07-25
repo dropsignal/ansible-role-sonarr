@@ -4,7 +4,8 @@
 [![Ansible Galaxy](https://img.shields.io/badge/ansible--galaxy-sonarr-blue.svg?style=flat)](https://galaxy.ansible.com/dropsignal/sonarr)
 [![License](https://img.shields.io/badge/license-GPLv2-brightgreen.svg?style=flat)](COPYING)
 
-RedHat - Sonarr is a PVR for Usenet and BitTorrent users
+Debian/RedHat - PVR for Usenet and BitTorrent users
+Based off https://github.com/jewflix/ansible-role-jackett
 
 ## Requirements
 
@@ -12,12 +13,16 @@ None
 
 ## Role Variables
 
+    sonarr_gid: 2000 (optional)
     sonarr_group: sonarr
-    sonarr_home: /var/lib/sonarr
+    sonarr_uid: 2000 (optional)
     sonarr_owner: sonarr
+    sonarr_home: /var/lib/sonarr
+    sonarr_shell: /bin/bash
     sonarr_serverconfig:
       port: 8989
       adminpassword: ''
+    sonarr_cpuquota: 100%
 
 ## Dependencies
 
@@ -26,7 +31,7 @@ None
 ## Example Playbook
 
     - hosts: mediaservers
-      roles:
+      ansible.builtin.roles:
         - role: dropsignal.sonarr
           sonarr_home: /var/lib/sonarr
           sonarr_group: sonarr
