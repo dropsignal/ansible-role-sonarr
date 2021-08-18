@@ -3,10 +3,10 @@
   tags: sonarr
   become: true
   apt:
-    name: "{{ jackett_packages }}"
+    name: "{{ sonarr_packages }}"
     state: present
   vars:
-    jackett_packages:
+    sonarr_packages:
       - mono-devel
   when: ansible_os_family == 'Debian'
   
