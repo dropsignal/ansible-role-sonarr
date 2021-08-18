@@ -1,6 +1,6 @@
 ---
 - name: Ensure sonarr dependencies are installed (Debian)
-  tags: jackett
+  tags: sonarr
   become: true
   apt:
     name: "{{ jackett_packages }}"
@@ -29,7 +29,7 @@
     name: "{{ sonarr_group }}"
     state: present
     system: true
-  
+    
 - name: Ensure the sonarr user is present
   tags: sonarr
   become: true
@@ -82,14 +82,14 @@
   uri:
     method: GET
     status_code: 200
-    url: https://api.github.com/repos/sonarr/Sonarr/releases/latest
+    url: https://services.sonarr.tv/v1/download/main?version=3&os=linux
   register: _sonarr_uri
   when: not _sonarr_conf.stat.exists or sonarr_update|bool
   
 - name: Gathering sonarr version information
   tags: sonarr
   set_fact:
-    sonarr_version: "{{ _sonarr_uri.json.name }}"
+    sonarr_version: "{{ _sonarr_uri.json.version }}"
   when: not _sonarr_conf.stat.exists or sonarr_update|bool
   
 - name: Creating temporary file for release download
@@ -111,24 +111,10 @@
     group: "{{ sonarr_group }}"
     mode: 0644
     owner: "{{ sonarr_owner }}"
-    url: 'https://github.com/Jackett/Jackett/releases/download/{{ sonarr_version }}/Jackett.Binaries.LinuxAMDx64.tar.gz'
+    url: "{{ _sonarr_uri.json.linux.manual.url }}"
   when:
     - not _sonarr_conf.stat.exists or sonarr_update|bool
     - ansible_architecture == "x86_64"
-    
-- name: Fetching the latest linux sonarr release (ARMv7_32)
-  tags: sonarr
-  become: true
-  get_url:
-    dest: "{{ _sonarr_tempfile.path }}"
-    force: true
-    group: "{{ sonarr_group }}"
-    mode: 0644
-    owner: "{{ sonarr_owner }}"
-    url: 'https://github.com/Jackett/Jackett/releases/download/{{ sonarr_version }}/Jackett.Binaries.LinuxARM32.tar.gz'
-  when:
-    - not _sonarr_conf.stat.exists or sonarr_update|bool
-    - ansible_architecture == "armv7l"
     
 - name: Extracting sonarr release into {{ sonarr_home }}
   tags: sonarr
@@ -158,14 +144,14 @@
     group: "{{ sonarr_group }}"
     mode: 0700
     owner: "{{ sonarr_owner }}"
-    path: "{{ [sonarr_home, 'Jackett']|join('/') }}"
+    path: "{{ [sonarr_home, 'Sonarr']|join('/') }}"
     state: directory
     
 - name: Overlaying the sonarr server configuration
   tags: sonarr
   become: true
   template:
-    dest: "{{ [sonarr_home, 'Jackett', 'ServerConfig.json']|join('/') }}"
+    dest: "{{ [sonarr_home, 'Sonarr', 'ServerConfig.json']|join('/') }}"
     group: "{{ sonarr_group }}"
     mode: 0600
     owner: "{{ sonarr_owner }}"
